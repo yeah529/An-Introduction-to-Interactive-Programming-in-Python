@@ -1,0 +1,118 @@
+# implementation of card game - Memory
+
+import simplegui
+import random
+
+list1 = [num for num in range(0,8)]
+list2 = [num for num in range(0,8)]
+lit = list1+list2
+
+expose=[]
+for i in range(16):
+    expose.append(False)
+x_xis = [0]
+
+for m in range(1,16):
+    x_xis.append(x_xis[m-1]+50)
+
+hor = [3]
+for m in range(1,16):
+    hor.append(hor[m-1]+50)
+    
+state = 0
+turns = 0
+x1 = 0
+x2 = 0
+x3 = 0
+
+y1 = 0
+y2 = 0
+flag = False
+# helper function to initialize globals
+def new_game():
+    global lit,turns
+    random.shuffle(list1)
+    random.shuffle(list2)
+    
+    lit = list1+list2
+    
+    for i in range(16):
+        expose[i] = False
+    turns = 0
+    label.set_text('Turns = '+str(turns))
+# define event handlers
+def mouseclick(pos):
+    # add game state logic here
+    global state,x1,x2,turns,flag,y1,y2,x3
+    
+ 
+    xy = list(pos)
+    
+    for i in range(len(lit)):
+        if xy[0] >= x_xis[i] and xy[0] < x_xis[i]+50 and xy[1] > 0 and xy[1] < 100 and state == 0 and expose[i] == False:
+            expose[i] = True
+            x1 = i
+            state = 1
+        elif xy[0] >= x_xis[i] and xy[0] < x_xis[i]+50 and xy[1] > 0 and xy[1] < 100 and state == 1 and expose[i] == False:
+            expose[i] = True
+            x2 = i
+            state = 2
+            turns += 1 
+            label.set_text('Turns = '+str(turns))
+            flag = False
+        elif xy[0] >= x_xis[i] and xy[0] < x_xis[i]+50 and xy[1] > 0 and xy[1] < 100 and state == 2 and expose[i] == False:
+            expose[i] = True
+            x3 = i
+            if lit[x1] == lit[x2]:
+                y1 = x1
+                y2 = x2
+                x1 = i
+                x2 = 0
+                state = 1
+                flag = True
+            elif lit[x1] != lit[x2] and lit[x2] != lit[x3]:
+                expose[x1] = False
+                expose[x2] = False
+                state = 1
+                x1 = i
+                x2 = 0
+            elif lit[x1] != lit[x2] and lit[x2] == lit[x3]:
+                expose[x1] = False
+                y1 = x2
+                y2 = x3
+                x1 = 0
+                x2 = 0
+                state = 0
+                flag = True
+                     
+# cards are logically 50x100 pixels in size    
+def draw(canvas):
+    horizontal = 3
+    for x in range(len(lit)):
+        canvas.draw_text(str(lit[x]),(hor[x],80),90,"White")
+    
+    for i in range(len(lit)):
+        if expose[i]:
+            canvas.draw_polygon([(x_xis[i],0),(x_xis[i],100),(x_xis[i]+50,100),(x_xis[i]+50,0)],1,"black")
+        else:
+            canvas.draw_polygon([(x_xis[i],0),(x_xis[i],100),(x_xis[i]+50,100),(x_xis[i]+50,0)],1,"black","Gray")
+    if flag:
+        canvas.draw_text(str(lit[y1]),(hor[y1],80),90,"Yellow")
+        canvas.draw_text(str(lit[y2]),(hor[y2],80),90,"Yellow")
+# create frame and add a button and labels
+frame = simplegui.create_frame("Memory", 800, 100)
+frame.add_button("Restart", new_game)
+label = frame.add_label("Turns = 0")
+
+
+# register event handlers
+frame.set_mouseclick_handler(mouseclick)
+frame.set_draw_handler(draw)
+
+
+# get things rolling
+new_game()
+frame.start()
+
+
+# Always remember to review the grading rubric
